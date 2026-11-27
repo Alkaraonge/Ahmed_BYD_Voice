@@ -33,11 +33,22 @@ android {
                 keyAlias = kAlias
                 keyPassword = kPass
             } else {
-                val dbg = signingConfigs.getByName("debug")
-                storeFile = dbg.storeFile
-                storePassword = dbg.storePassword
-                keyAlias = dbg.keyAlias
-                keyPassword = dbg.keyPassword
+                val fallbackKs = layout.buildDirectory.file("tmp/fallback-debug.jks").get().asFile
+                if (!fallbackKs.exists()) {
+                    fallbackKs.parentFile.mkdirs()
+                    ProcessBuilder(
+                        "keytool", "-genkeypair", "-v",
+                        "-keystore", fallbackKs.absolutePath,
+                        "-alias", "androiddebugkey",
+                        "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
+                        "-storepass", "android", "-keypass", "android",
+                        "-dname", "CN=Android Debug,O=Android,C=US"
+                    ).redirectErrorStream(true).start().waitFor()
+                }
+                storeFile = fallbackKs
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
         }
     }
