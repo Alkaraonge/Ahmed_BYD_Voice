@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Accept SDK licenses & install platform 34
+        run: |
+          mkdir -p "$ANDROID_HOME/licenses"
+          printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' > "$ANDROID_HOME/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKM" ] || SDKM="$ANDROID_HOME/cmdline-tools/bin/sdkmanager"
+          [ -x "$SDKM" ] || SDKM="$(find "$ANDROID_HOME" -name sdkmanager -type f -print -quit 2>/dev/null)"
+          if [ -z "$SDKM" ]; then echo "sdkmanager not found"; exit 1; fi
+          "$SDKM" "platforms;android-34" "build-tools;34.0.0" > /dev/null
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Run unit tests (theme + update + voice)
+        run: gradle :core:theme:testDebugUnitTest :core:update:testDebugUnitTest :core:voice:testDebugUnitTest --stacktrace
+
+      - name: Build Debug APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Verify R8/ProGuard Release APK (Vosk + JNA check)
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ahmed_BYD_Voice-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
