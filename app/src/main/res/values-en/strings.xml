@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Ahmed Programming</string>
     <string name="dashboard_title">Theme Dashboard</string>
-    <string name="dashboard_subtitle">50 themes — pick your car\'s identity</string>
+    <string name="dashboard_subtitle">50 themes — pick your car\’s identity</string>
     <string name="search_hint">Search themes…</string>
     <string name="all_categories">All</string>
     <string name="applied_theme">Applied ✅</string>
@@ -24,7 +24,7 @@
     <string name="update_verify_failed">Signature check (sha256) failed — not installed</string>
     <string name="update_network_error">Network error — try again</string>
     <string name="update_no_connection">No internet connection</string>
-    <string name="update_changelog_title">What\'s new in this release</string>
+    <string name="update_changelog_title">What’s new in this release</string>
     <string name="update_progress">Downloading… %1$d%%</string>
     <string name="mode_auto">Auto</string>
     <string name="mode_day">Day</string>
@@ -38,7 +38,7 @@
     <string name="voice_listen">Tap and speak</string>
     <string name="voice_listening">Listening…</string>
     <string name="voice_heard">Heard: %1$s</string>
-    <string name="voice_error">Didn\'t get it — try again</string>
+    <string name="voice_error">Didn’t get it — try again</string>
     <string name="voice_permission">Microphone permission needed</string>
     <string name="voice_hint">Try: “night mode”, “Midnight Glass”, “check for update”</string>
     <string name="voice_applied">Done: %1$s</string>

@@ -188,45 +188,28 @@ fun VoiceScreen(
 
     fun beginOfflineListening() {
         val model = voskModel ?: run { error = true; return }
-        val service = voskService ?: run {
-            runCatching {
-                val rec = Recognizer(model, 16000.0f).also { voskRecognizer = it }
-                SpeechService(rec, 16000.0f)
-            }.getOrNull()?.also { voskService = it }
-        } ?: run { error = true; return }
-
-        error = false
-        val voskListener = object : VoskRecognitionListener {
-            override fun onPartialResult(hypothesis: String?) {}
+        val listener = object : VoskRecognitionListener {
+            override fun onPartialResult(p0: String?) {}
             override fun onResult(hypothesis: String?) {
-                val text = hypothesis?.let { extractVoskText(it) }?.trim()
-                if (!text.isNullOrBlank()) {
-                    runCatching { service.stop() }
-                    listening = false
-                    handleHeardText(text)
-                }
+                listening = false
+                handleHeardText(hypothesis?.let { extractVoskText(it) })
             }
             override fun onFinalResult(hypothesis: String?) {
-                val wasListening = listening
-                listening = false
-                if (wasListening) {
-                    val text = hypothesis?.let { extractVoskText(it) }?.trim()
-                    if (!text.isNullOrBlank()) {
-                        handleHeardText(text)
-                    }
-                }
-            }
-            override fun onError(e: Exception?) {
-                runCatching { service.stop() }
-                listening = false
-                error = true
-            }
-            override fun onTimeout() {
-                runCatching { service.stop() }
+                // النتيجة النهائية تُعالج بـ onResult — هنا فقط نوقف الحالة
                 listening = false
             }
+            override fun onError(e: Exception?) { listening = false; error = true }
+            override fun onTimeout() { listening = false }
         }
-        runCatching { service.startListening(voskListener, 10000) }
+        val service = voskService ?: run {
+            runCatching {
+                val recognizer = Recognizer(model, 16000.0f)
+                SpeechService(recognizer, 16000.0f)
+            }.getOrNull()
+        } ?: run { error = true; return }
+        voskService = service
+        error = false
+        runCatching { service.startListening(listener) }
             .onSuccess { listening = true }
             .onFailure {
                 listening = false
@@ -249,6 +232,7 @@ fun VoiceScreen(
             else -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
+
 
     // نبض زر المايك أثناء الاستماع
     val pulse by rememberInfiniteTransition(label = "micPulse").animateFloat(
